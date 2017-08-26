@@ -175,8 +175,8 @@
 			<artifactId>spring-jdbc</artifactId>
 			<version>3.2.2.RELEASE</version>
 		</dependency>
-		
-				<!-- 스프링 시큐리티(보안) -->
+
+		<!-- 스프링 시큐리티(보안) -->
 		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-core</artifactId>
@@ -200,7 +200,20 @@
 			<artifactId>spring-security-taglibs</artifactId>
 			<version>4.2.2.RELEASE</version>
 		</dependency>
-		
+
+		<!-- 메일SMTP -->
+		<!-- https://mvnrepository.com/artifact/javax.mail/javax.mail-api -->
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>javax.mail-api</artifactId>
+			<version>1.5.5</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.mail</groupId>
+			<artifactId>javax.mail</artifactId>
+			<version>1.5.5</version>
+		</dependency>
+
 		<!-- Test -->
 		<dependency>
 			<groupId>junit</groupId>
