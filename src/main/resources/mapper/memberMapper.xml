@@ -8,4 +8,12 @@
 	<select id="checkId" parameterType="memberDTO" resultType="memberDTO">
 		select * from MEMBER where EMAIL = #{email}
 	</select>
+	
+	<update id="authMember" parameterType="memberDTO">
+		update MEMBER set AUTH = '0' where EMAIL=#{email} and AUTH = #{auth}
+	</update>
+	
+	<select id="checkMember" parameterType="memberDTO" resultType="memberDTO">
+		select * from MEMBER where EMAIL = #{email} and PASSWORD = #{password}
+	</select>
 </mapper>

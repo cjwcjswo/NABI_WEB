@@ -18,6 +18,13 @@ public interface MemberDAO {
 	MemberDTO checkId(MemberDTO dto);
 	
 	/**
+	 * 이메일 인증
+	 * @param dto 인증할 회원 dto
+	 * @return
+	 */
+	int authMember(MemberDTO dto);
+	
+	/**
 	 * 로그인
 	 * @param dto 멤버 dto
 	 * @return 데이터베이스 멤버 정보

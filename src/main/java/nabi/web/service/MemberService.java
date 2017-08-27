@@ -17,6 +17,13 @@ public interface MemberService {
 	 */
 	MemberDTO selectMember(MemberDTO dto);
 	
+	/**
+	 * 이메일 인증
+	 * @param dto 인증할 회원 dto
+	 * @return
+	 */
+	int authMember(MemberDTO dto);
+	
 	 /**
 	  * 해당하는 유저에게 인증 메일 보내기
 	  * @param email: 해당하는 유저 이메일

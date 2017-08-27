@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import nabi.web.dao.MemberDAO;
 import nabi.web.dto.MemberDTO;
+import nabi.web.util.Constants;
 
 @Service
 @Transactional
@@ -41,6 +42,7 @@ public class MemberServiceImpl implements MemberService {
 		String encPassword = passwordEncoder.encode(dto.getPassword()); // 패스워드
 																		// 암호화
 		dto.setPassword(encPassword);
+		dto.setToken("0");
 		int authNum = (int) ((Math.random() * 99998) + 1);
 		sendEmail(dto.getEmail(), authNum);
 		dto.setAuth(authNum);
@@ -50,8 +52,13 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	public MemberDTO selectMember(MemberDTO dto) {
-		// TODO Auto-generated method stub
-		return null;
+		MemberDTO member = memberDAO.selectMember(dto); // 회원 검색
+		if(member == null) return null; // 검색 결과가 없다면
+		//비밀번호가 일치하지 않다면
+		if(!passwordEncoder.matches(dto.getPassword(), member.getPassword())){
+			return null;
+		}
+		return member;
 	}
 
 	@Override
@@ -62,7 +69,8 @@ public class MemberServiceImpl implements MemberService {
 		String fromName = "NABI";
 		String from = "doothing123@gmail.com";
 		String to1 = email;
-		String content = "가입을 축하드립니다! 아래 링크를 누르면 인증이 자동적으로 완료됩니다!";
+		String content = "가입을 축하드립니다! 아래 링크를 누르면 인증이 자동적으로 완료됩니다!"
+				+ "<br> <a href='"+Constants.NABI_IP+"/member/auth?email="+email+"&auth="+authNum+"'>인증하기</a>";
 		try {
 			Properties props = new Properties();
 			props.put("mail.smtp.starttls.enable", "true");
@@ -90,6 +98,11 @@ public class MemberServiceImpl implements MemberService {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	@Override
+	public int authMember(MemberDTO dto) {
+		return memberDAO.authMember(dto);
 	}
 
 }
