@@ -24,10 +24,4 @@ public interface MemberDAO {
 	 */
 	int authMember(MemberDTO dto);
 	
-	/**
-	 * 로그인
-	 * @param dto 멤버 dto
-	 * @return 데이터베이스 멤버 정보
-	 */
-	MemberDTO selectMember(MemberDTO dto);
 }

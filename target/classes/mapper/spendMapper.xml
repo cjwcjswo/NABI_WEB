@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="spendMapper">
+	<insert id="insertSpending" parameterType="spendDTO">
+		insert into SPENDING_${month} values(#{email}, #{spendDay}, #{day}, #{year}, #{location}, #{spending})
+	</insert>
+	
+	<delete id="deleteSpending" parameterType="spendDTO">
+		delete from SPENDING_${month} where email = #{email} and SPENDDAY = #{spendDay} and YEAR = #{year} and DAY = #{day} and LOCATION = #{location} and SPENDING = #{spending}
+	</delete>
+	<select id="selectSpending" parameterType="spendDTO" resultType="spendDTO">
+		select * from SPENDING_${month} where email = #{email} and year = #{year}
+	</select>
+	
+	<insert id="insertGoal" parameterType="spendDTO">
+		insert into SPENDING_GOAL values(#{email}, #{year}, #{month}, #{spending})
+	</insert>
+	
+	<update id="updateGoal" parameterType="spendDTO">
+		update SPENDING_GOAL set SPENDING = #{spending} where EMAIL = #{email} and YEAR = #{year} and MONTH = #{month}
+	</update>
+	
+	
+	<select id="selectGoal" parameterType="spendDTO" resultType="spendDTO">
+		select * from SPENDING_GOAL where EMAIL = #{email} and YEAR = #{year} and MONTH = #{month}
+	</select>
+</mapper>
