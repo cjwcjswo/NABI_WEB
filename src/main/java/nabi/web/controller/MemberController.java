@@ -34,7 +34,10 @@ public class MemberController {
 	@RequestMapping("/login")
 	@ResponseBody
 	public MemberDTO login(MemberDTO dto){
-		return memberService.selectMember(dto);
+		System.out.println(dto);
+		MemberDTO member = memberService.selectMember(dto);
+		System.out.println(member);
+		return member;
 	}
 	
 	/**

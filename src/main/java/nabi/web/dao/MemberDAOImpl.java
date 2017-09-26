@@ -21,10 +21,6 @@ public class MemberDAOImpl implements MemberDAO{
 		return sqlSession.selectOne("memberMapper.checkId", dto);
 	}
 
-	@Override
-	public MemberDTO selectMember(MemberDTO dto) {
-		return sqlSession.selectOne("memberMapper.checkMember", dto);
-	}
 
 	@Override
 	public int authMember(MemberDTO dto) {

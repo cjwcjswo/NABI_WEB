@@ -52,10 +52,11 @@ public class MemberServiceImpl implements MemberService {
 
 	@Override
 	public MemberDTO selectMember(MemberDTO dto) {
-		MemberDTO member = memberDAO.selectMember(dto); // 회원 검색
+		MemberDTO member = memberDAO.checkId(dto); // 회원 검색
 		if(member == null) return null; // 검색 결과가 없다면
 		//비밀번호가 일치하지 않다면
 		if(!passwordEncoder.matches(dto.getPassword(), member.getPassword())){
+			System.out.println("비밀번호 불일치: " + dto.getPassword() + ", " + member.getPassword());
 			return null;
 		}
 		return member;
