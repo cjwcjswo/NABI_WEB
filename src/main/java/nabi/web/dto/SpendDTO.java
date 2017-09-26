@@ -9,8 +9,6 @@ public class SpendDTO {
 	private String day;
 	private String year;
 	
-	
-	
 	public String getYear() {
 		return year;
 	}
