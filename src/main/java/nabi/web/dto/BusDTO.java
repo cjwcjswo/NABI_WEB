@@ -11,16 +11,35 @@ public class BusDTO {
 	private String staOrder;
 	private String stationId;
 	private String busName;
+	private String busType;
 	
 
 
+	
+	
 	@Override
 	public String toString() {
-		return "BusDTO [locationNoOne=" + locationNoOne + ", locationNoTwo=" + locationNoTwo + ", plateNoOne="
-				+ plateNoOne + ", plateNoTwo=" + plateNoTwo + ", predictTimeOne=" + predictTimeOne + ", predictTimeTwo="
-				+ predictTimeTwo + ", routeId=" + routeId + ", staOrder=" + staOrder + ", stationId=" + stationId
-				+ ", busName=" + busName + "]";
+		return "BusDTO [" + (locationNoOne != null ? "locationNoOne=" + locationNoOne + ", " : "")
+				+ (locationNoTwo != null ? "locationNoTwo=" + locationNoTwo + ", " : "")
+				+ (plateNoOne != null ? "plateNoOne=" + plateNoOne + ", " : "")
+				+ (plateNoTwo != null ? "plateNoTwo=" + plateNoTwo + ", " : "")
+				+ (predictTimeOne != null ? "predictTimeOne=" + predictTimeOne + ", " : "")
+				+ (predictTimeTwo != null ? "predictTimeTwo=" + predictTimeTwo + ", " : "")
+				+ (routeId != null ? "routeId=" + routeId + ", " : "")
+				+ (staOrder != null ? "staOrder=" + staOrder + ", " : "")
+				+ (stationId != null ? "stationId=" + stationId + ", " : "")
+				+ (busName != null ? "busName=" + busName + ", " : "") + (busType != null ? "busType=" + busType : "")
+				+ "]";
 	}
+
+	public String getBusType() {
+		return busType;
+	}
+
+	public void setBusType(String busType) {
+		this.busType = busType;
+	}
+
 	public String getBusName() {
 		return busName;
 	}

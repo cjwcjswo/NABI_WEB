@@ -19,7 +19,8 @@ public class TrafficController {
 	@RequestMapping("/searchStation")
 	@ResponseBody
 	public List<BusDTO> searchStation(String stationId){
-		trafficService.searchStation(stationId);
-		return null;
+		List<BusDTO> busList = trafficService.searchStation(stationId);;
+		System.out.println(busList);
+		return busList;
 	}
 }
