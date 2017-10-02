@@ -157,9 +157,7 @@ public class TrafficServiceImpl implements TrafficService {
 			folder.mkdirs();
 		}
 		File file = new File(Constants.ROUTE_FOLDER + "\\" + fileName);
-		if (file.isFile()) {
-
-		} else {
+		if (!file.isFile() || file.length() == 0) {
 			fileUrlDownload(Constants.ROUTE_URL + fileName, Constants.ROUTE_FOLDER);
 		}
 	}
