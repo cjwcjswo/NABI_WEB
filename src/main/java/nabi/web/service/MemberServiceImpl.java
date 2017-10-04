@@ -66,7 +66,7 @@ public class MemberServiceImpl implements MemberService {
 	public void sendEmail(String email, int authNum) {
 		// 인증메일을 보내기위한 세팅
 		String host = "smtp.gmail.com";
-		String subject = "NABI 인증확인 이메일입니다.";
+		String subject = "NABI Authentcation Email!.";
 		String fromName = "NABI";
 		String from = "doothing123@gmail.com";
 		String to1 = email;
