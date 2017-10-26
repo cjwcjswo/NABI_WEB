@@ -1,13 +1,15 @@
 package nabi.web.service;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -28,6 +30,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import nabi.web.dto.BusDTO;
+import nabi.web.dto.StationDTO;
 import nabi.web.util.Constants;
 
 @Service
@@ -44,11 +47,41 @@ public class TrafficServiceImpl implements TrafficService {
 		Calendar cal = Calendar.getInstance();
 		sb.append(cal.get(Calendar.YEAR));
 		sb.append(String.format("%02d", cal.get(Calendar.MONTH) + 1));
-		sb.append(cal.get(Calendar.DAY_OF_MONTH));
+		sb.append(String.format("%02d", cal.get(Calendar.DAY_OF_MONTH)));
 		fileMake(sb + ".txt");
 		return arrivalBusList(stationId, sb + ".txt");
 	}
 
+	public void setBusCurrentStation(List<StationDTO> stationList, String routeId){
+		URL url;
+		Document doc;
+		try {
+			url = new URL(
+					Constants.BUS_SEARCH_URL + "serviceKey=" + Constants.BUS_AUTH_KEY + "&routeId=" + routeId);
+			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+			DocumentBuilder db = dbf.newDocumentBuilder(); // XML문서 빌더 객체를 생성
+			doc = db.parse(new InputSource(url.openStream())); // XML문서를 파싱한다.
+			doc.getDocumentElement().normalize();
+			NodeList nList = doc.getElementsByTagName("busLocationList");
+			for (int temp = 0; temp < nList.getLength(); temp++) {
+				Node nNode = nList.item(temp);
+				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+					Element eElement = (Element) nNode;
+					String stationId = getTagValue("stationId", eElement);
+					for(int i=0; i<stationList.size(); i++){
+						StationDTO station = stationList.get(i);
+						if(station.getStationId().equals(stationId)){
+							station.setBus(true);
+							station.setPlateNo(getTagValue("plateNo", eElement));
+						}
+					}
+			
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	public List<BusDTO> arrivalBusList(String stationId, String fileName) {
 		List<BusDTO> busList = new ArrayList<>();
 		List<String> busRouteIdList = new ArrayList<>();
@@ -84,11 +117,15 @@ public class TrafficServiceImpl implements TrafficService {
 			Map<String, List<String>> map = fileRead(fileName, busRouteIdList);
 			List<String> busNameList = map.get("name");
 			List<String> busTypeList = map.get("type");
+			List<String> firstList = map.get("first");
+			List<String> lastList = map.get("last");
 			for (int i = 0; i < busNameList.size(); i++) {
 				BusDTO bus = busList.get(i);
 				bus.setBusName(busNameList.get(i));
 				bus.setBusType(busTypeList.get(i));
-				
+				bus.setFirstStation(firstList.get(i));
+				bus.setLastStation(lastList.get(i));
+
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -105,15 +142,44 @@ public class TrafficServiceImpl implements TrafficService {
 			return nValue.getNodeValue();
 	}
 
+	public List<StationDTO> stationFileRead(String fileName, String routeId) {
+		List<StationDTO> stationList = new ArrayList<>();
+		try { // 예외 처리는 기본으로 해 줘야 한다
+				// 파일에서 스트림을 통해 주르륵 읽어들인다
+			BufferedReader in = new BufferedReader(new FileReader(Constants.ROUTE_FOLDER + "\\" + fileName));
+
+			String s;
+			while ((s = in.readLine()) != null) {
+				String[] split = s.split("\\^");
+				for (int i = 0; i < split.length; i++) {
+					String[] busInfo = split[i].split("\\|");
+					if (busInfo[0].equals(routeId)) {
+						stationList.add(new StationDTO(routeId, busInfo[1], busInfo[5], "", Integer.parseInt(busInfo[3]), false));
+					}
+				}
+			}
+
+			in.close();
+		} catch (IOException e) {
+			System.err.println(e);
+		}
+
+		return stationList;
+	}
+
 	public Map<String, List<String>> fileRead(String fileName, List<String> busRouteList) {
 		Map<String, List<String>> map = new HashMap<>();
 		List<String> busNameList = null;
 		List<String> busTypeList = null;
+		List<String> firstList = null;
+		List<String> lastList = null;
 		try { // 예외 처리는 기본으로 해 줘야 한다
 				// 파일에서 스트림을 통해 주르륵 읽어들인다
 			BufferedReader in = new BufferedReader(new FileReader(Constants.ROUTE_FOLDER + "\\" + fileName));
 			busNameList = new ArrayList<>();
 			busTypeList = new ArrayList<>();
+			firstList = new ArrayList<>();
+			lastList = new ArrayList<>();
 			String s;
 			while ((s = in.readLine()) != null) {
 				String[] split = s.split("\\^");
@@ -122,6 +188,8 @@ public class TrafficServiceImpl implements TrafficService {
 						String[] busInfo = split[j].split("\\|");
 						if (busRouteList.get(i).equals(busInfo[0])) {
 							busNameList.add(busInfo[1]);
+							firstList.add(busInfo[4]);
+							lastList.add(busInfo[7]);
 							switch (busInfo[2]) {
 							case "13":
 							case "23":
@@ -147,6 +215,8 @@ public class TrafficServiceImpl implements TrafficService {
 		}
 		map.put("name", busNameList);
 		map.put("type", busTypeList);
+		map.put("first", firstList);
+		map.put("last", lastList);
 		return map;
 	}
 
@@ -170,24 +240,31 @@ public class TrafficServiceImpl implements TrafficService {
 	 * @param downloadDir
 	 */
 	public void fileUrlReadAndDownload(String fileAddress, String localFileName, String downloadDir) {
-		OutputStream outStream = null;
 		URLConnection uCon = null;
 		InputStream is = null;
+		BufferedReader br = null;
+		BufferedWriter bw = null;
 		try {
 			System.out.println("-------Download Start------");
 			URL Url;
-			byte[] buf;
+			char[] buf;
 			int byteRead;
 			int byteWritten = 0;
 			Url = new URL(fileAddress);
-			outStream = new BufferedOutputStream(new FileOutputStream(downloadDir + "\\" + localFileName));
+
 			uCon = Url.openConnection();
 			is = uCon.getInputStream();
-			buf = new byte[BUFF_SIZE];
-			while ((byteRead = is.read(buf)) != -1) {
-				outStream.write(buf, 0, byteRead);
-				byteWritten += byteRead;
+			InputStreamReader isr = new InputStreamReader(is, "MS949");
+			OutputStreamWriter osr = new OutputStreamWriter(new FileOutputStream(downloadDir + "\\" + localFileName),
+					"MS949");
+			bw = new BufferedWriter(osr);
+			br = new BufferedReader(isr);
+
+			buf = new char[BUFF_SIZE];
+			while ((byteRead = br.read(buf)) != -1) {
+				bw.write(buf, 0, byteRead);
 			}
+			bw.flush();
 			System.out.println("Download Successfully.");
 			System.out.println("File name : " + localFileName);
 			System.out.println("of bytes  : " + byteWritten);
@@ -196,8 +273,8 @@ public class TrafficServiceImpl implements TrafficService {
 			e.printStackTrace();
 		} finally {
 			try {
-				is.close();
-				outStream.close();
+				br.close();
+				bw.close();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -219,5 +296,41 @@ public class TrafficServiceImpl implements TrafficService {
 		} else {
 			System.err.println("path or file name NG.");
 		}
+	}
+
+	@Override
+	public List<StationDTO> searchBus(String routeId) {
+		StringBuilder sb = new StringBuilder("routestation");
+		Calendar cal = Calendar.getInstance();
+		sb.append(cal.get(Calendar.YEAR));
+		sb.append(String.format("%02d", cal.get(Calendar.MONTH) + 1));
+		sb.append(String.format("%02d", cal.get(Calendar.DAY_OF_MONTH)));
+		String fileName = sb+".txt";
+		fileMake(fileName);
+		List<StationDTO> list = stationFileRead(fileName, routeId);
+		setBusCurrentStation(list, routeId);
+		return list;
+	}
+
+	@Override
+	public void fileSetup() {
+		// TODO Auto-generated method stub
+		File folder = new File(Constants.ROUTE_FOLDER);
+		File[] files = folder.listFiles();
+		for (File file : files) {
+			file.delete();
+		}
+		StringBuilder routeSb = new StringBuilder("route");
+		StringBuilder routeStationSb = new StringBuilder("routestation");
+		Calendar cal = Calendar.getInstance();
+
+		String timeInfo = cal.get(Calendar.YEAR) + String.format("%02d", cal.get(Calendar.MONTH) + 1)
+				+ String.format("%02d", cal.get(Calendar.DAY_OF_MONTH));
+		routeSb.append(timeInfo);
+		routeStationSb.append(timeInfo);
+
+		fileMake(routeSb + ".txt");
+		fileMake(routeStationSb + ".txt");
+
 	}
 }

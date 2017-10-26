@@ -12,7 +12,8 @@ public class BusDTO {
 	private String stationId;
 	private String busName;
 	private String busType;
-	
+	private String firstStation;
+	private String lastStation;
 
 
 	
@@ -31,6 +32,32 @@ public class BusDTO {
 				+ (busName != null ? "busName=" + busName + ", " : "") + (busType != null ? "busType=" + busType : "")
 				+ "]";
 	}
+
+	
+	
+	public String getFirstStation() {
+		return firstStation;
+	}
+
+
+
+	public void setFirstStation(String firstStation) {
+		this.firstStation = firstStation;
+	}
+
+
+
+	public String getLastStation() {
+		return lastStation;
+	}
+
+
+
+	public void setLastStation(String lastStation) {
+		this.lastStation = lastStation;
+	}
+
+
 
 	public String getBusType() {
 		return busType;
