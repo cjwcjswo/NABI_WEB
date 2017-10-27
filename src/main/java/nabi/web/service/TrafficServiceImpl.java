@@ -60,7 +60,7 @@ public class TrafficServiceImpl implements TrafficService {
 			BusBookDTO busBookDTO = busBookDTOList.get(i);
 			for (int j = 0; j < busList.size(); j++) {
 				BusDTO busDTO = busList.get(j);
-				if (busBookDTO.getRouteId().equals(busDTO.getBusName())) {
+				if (busBookDTO.getRouteId().equals(busDTO.getRouteId()) && busBookDTO.getStationId().equals(busDTO.getStationId())) {
 					busDTO.setBook(true);
 				}
 			}
