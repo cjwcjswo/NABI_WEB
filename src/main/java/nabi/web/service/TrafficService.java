@@ -9,7 +9,7 @@ import nabi.web.dto.StationDTO;
 public interface TrafficService {
 	List<BusDTO> searchStation(String stationId, String email);
 	List<StationDTO> searchBus(String routeId);
-	List<BusBookDTO> selectBookBus(String email);
+	List<BusDTO> selectBookBus(String email);
 	int insertBookBus(BusBookDTO dto);
 	int deleteBookBus(BusBookDTO dto);
 	void fileSetup();

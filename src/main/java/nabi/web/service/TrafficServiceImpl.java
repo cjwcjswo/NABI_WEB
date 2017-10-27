@@ -55,12 +55,12 @@ public class TrafficServiceImpl implements TrafficService {
 		sb.append(String.format("%02d", cal.get(Calendar.DAY_OF_MONTH)));
 		fileMake(sb + ".txt");
 		List<BusDTO> busList = arrivalBusList(stationId, sb + ".txt");
-		List<BusBookDTO> busBookDTOList= trafficDAO.selectBookBus(email);
-		for(int i=0; i<busBookDTOList.size(); i++){
+		List<BusBookDTO> busBookDTOList = trafficDAO.selectBookBus(email);
+		for (int i = 0; i < busBookDTOList.size(); i++) {
 			BusBookDTO busBookDTO = busBookDTOList.get(i);
-			for(int j=0; j<busList.size(); j++){
+			for (int j = 0; j < busList.size(); j++) {
 				BusDTO busDTO = busList.get(j);
-				if(busBookDTO.getRouteId().equals(busDTO.getBusName())){
+				if (busBookDTO.getRouteId().equals(busDTO.getBusName())) {
 					busDTO.setBook(true);
 				}
 			}
@@ -68,12 +68,11 @@ public class TrafficServiceImpl implements TrafficService {
 		return busList;
 	}
 
-	public void setBusCurrentStation(List<StationDTO> stationList, String routeId){
+	public void setBusCurrentStation(List<StationDTO> stationList, String routeId) {
 		URL url;
 		Document doc;
 		try {
-			url = new URL(
-					Constants.BUS_SEARCH_URL + "serviceKey=" + Constants.BUS_AUTH_KEY + "&routeId=" + routeId);
+			url = new URL(Constants.BUS_SEARCH_URL + "serviceKey=" + Constants.BUS_AUTH_KEY + "&routeId=" + routeId);
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder db = dbf.newDocumentBuilder(); // XML문서 빌더 객체를 생성
 			doc = db.parse(new InputSource(url.openStream())); // XML문서를 파싱한다.
@@ -84,20 +83,57 @@ public class TrafficServiceImpl implements TrafficService {
 				if (nNode.getNodeType() == Node.ELEMENT_NODE) {
 					Element eElement = (Element) nNode;
 					String stationId = getTagValue("stationId", eElement);
-					for(int i=0; i<stationList.size(); i++){
+					for (int i = 0; i < stationList.size(); i++) {
 						StationDTO station = stationList.get(i);
-						if(station.getStationId().equals(stationId)){
+						if (station.getStationId().equals(stationId)) {
 							station.setBus(true);
 							station.setPlateNo(getTagValue("plateNo", eElement));
 						}
 					}
-			
+
 				}
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+
+	public void updateBookList(String fileName, List<BusBookDTO> bookList, List<BusDTO> busList) {
+
+		URL url;
+		Document doc;
+		try {
+			for (int i = 0; i < bookList.size(); i++) {
+				BusBookDTO busBookDTO = bookList.get(i);
+				url = new URL(Constants.BUS_ARRIVAL_URL + "serviceKey=" + Constants.BUS_AUTH_KEY + "&routeId="
+				+busBookDTO.getRouteId()+"&stationId=" + busBookDTO.getStationId());
+				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+				DocumentBuilder db = dbf.newDocumentBuilder(); // XML문서 빌더 객체를
+																// 생성
+				doc = db.parse(new InputSource(url.openStream())); // XML문서를
+																	// 파싱한다.
+				doc.getDocumentElement().normalize();
+				NodeList nList = doc.getElementsByTagName("busArrivalItem");
+				for (int temp = 0; temp < nList.getLength(); temp++) {
+					Node nNode = nList.item(temp);
+					if (nNode.getNodeType() == Node.ELEMENT_NODE) {
+						Element eElement = (Element) nNode;
+						BusDTO bus = new BusDTO();
+						bus.setRouteId(busBookDTO.getRouteId());
+						bus.setStationId(busBookDTO.getStationId());
+						bus.setPredictTimeOne(getTagValue("predictTime1", eElement));
+						bus.setPredictTimeTwo(getTagValue("predictTime2", eElement));						
+						busList.add(bus);
+					}
+				}
+				fileRead(fileName, busList);
+
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 	public List<BusDTO> arrivalBusList(String stationId, String fileName) {
 		List<BusDTO> busList = new ArrayList<>();
 		URL url;
@@ -145,7 +181,33 @@ public class TrafficServiceImpl implements TrafficService {
 			return nValue.getNodeValue();
 	}
 
-	public List<StationDTO> stationFileRead(String fileName, String routeId) {
+	public void stationBookFileRead(String fileName, BusDTO busDTO) {
+
+		try { // 예외 처리는 기본으로 해 줘야 한다
+				// 파일에서 스트림을 통해 주르륵 읽어들인다
+			BufferedReader in = new BufferedReader(new FileReader(Constants.ROUTE_FOLDER + "\\" + fileName));
+			String stationId = busDTO.getStationId();
+			String s;
+			while ((s = in.readLine()) != null) {
+				String[] split = s.split("\\^");
+				for (int i = 0; i < split.length; i++) {
+					String[] stationInfo = split[i].split("\\|");
+					if (stationInfo[0].equals(stationId)) {
+						System.out.println(stationInfo[1]);
+						busDTO.setStationName(stationInfo[1]);
+						break;
+					}
+				}
+			}
+
+			in.close();
+		} catch (IOException e) {
+			System.err.println(e);
+		}
+
+	}
+
+	public List<StationDTO> routeStationFileRead(String fileName, String routeId) {
 		List<StationDTO> stationList = new ArrayList<>();
 		try { // 예외 처리는 기본으로 해 줘야 한다
 				// 파일에서 스트림을 통해 주르륵 읽어들인다
@@ -157,7 +219,8 @@ public class TrafficServiceImpl implements TrafficService {
 				for (int i = 0; i < split.length; i++) {
 					String[] busInfo = split[i].split("\\|");
 					if (busInfo[0].equals(routeId)) {
-						stationList.add(new StationDTO(routeId, busInfo[1], busInfo[5], "", Integer.parseInt(busInfo[3]), false));
+						stationList.add(new StationDTO(routeId, busInfo[1], busInfo[5], "",
+								Integer.parseInt(busInfo[3]), false));
 					}
 				}
 			}
@@ -168,6 +231,30 @@ public class TrafficServiceImpl implements TrafficService {
 		}
 
 		return stationList;
+	}
+
+	public void routeFileRead(String fileName, BusDTO busDTO) {
+
+		try { // 예외 처리는 기본으로 해 줘야 한다
+				// 파일에서 스트림을 통해 주르륵 읽어들인다
+			BufferedReader in = new BufferedReader(new FileReader(Constants.ROUTE_FOLDER + "\\" + fileName));
+
+			String s;
+			String busName = busDTO.getBusName();
+			while ((s = in.readLine()) != null) {
+				String[] split = s.split("\\^");
+
+				for (int i = 0; i < split.length; i++) {
+					String[] busInfo = split[i].split("\\|");
+					if (busName.equals(busInfo[1])) {
+						busDTO.setRouteId(busInfo[0]);
+					}
+				}
+			}
+			in.close();
+		} catch (IOException e) {
+			System.err.println(e);
+		}
 	}
 
 	public void fileRead(String fileName, List<BusDTO> busList) {
@@ -303,9 +390,9 @@ public class TrafficServiceImpl implements TrafficService {
 		sb.append(cal.get(Calendar.YEAR));
 		sb.append(String.format("%02d", cal.get(Calendar.MONTH) + 1));
 		sb.append(String.format("%02d", cal.get(Calendar.DAY_OF_MONTH)));
-		String fileName = sb+".txt";
+		String fileName = sb + ".txt";
 		fileMake(fileName);
-		List<StationDTO> list = stationFileRead(fileName, routeId);
+		List<StationDTO> list = routeStationFileRead(fileName, routeId);
 		setBusCurrentStation(list, routeId);
 		return list;
 	}
@@ -320,21 +407,42 @@ public class TrafficServiceImpl implements TrafficService {
 		}
 		StringBuilder routeSb = new StringBuilder("route");
 		StringBuilder routeStationSb = new StringBuilder("routestation");
+		 StringBuilder station = new StringBuilder("station");
 		Calendar cal = Calendar.getInstance();
 
 		String timeInfo = cal.get(Calendar.YEAR) + String.format("%02d", cal.get(Calendar.MONTH) + 1)
 				+ String.format("%02d", cal.get(Calendar.DAY_OF_MONTH));
 		routeSb.append(timeInfo);
 		routeStationSb.append(timeInfo);
-
+		 station.append(timeInfo);
 		fileMake(routeSb + ".txt");
 		fileMake(routeStationSb + ".txt");
-
+		 fileMake(station + ".txt");
 	}
 
 	@Override
-	public List<BusBookDTO> selectBookBus(String email) {
-		return trafficDAO.selectBookBus(email);
+	public List<BusDTO> selectBookBus(String email) {
+		 StringBuilder route = new StringBuilder("route");
+		 StringBuilder station = new StringBuilder("station");
+		 Calendar cal = Calendar.getInstance();
+		 String timeInfo = cal.get(Calendar.YEAR) + String.format("%02d",
+		 cal.get(Calendar.MONTH) + 1)
+		 + String.format("%02d", cal.get(Calendar.DAY_OF_MONTH));
+		 route.append(timeInfo);
+		 station.append(timeInfo);
+		 fileMake(route+ ".txt");
+		 fileMake(station+".txt");
+
+		List<BusBookDTO> busBookList = trafficDAO.selectBookBus(email);
+		System.out.println("북리스트: " + busBookList);
+		List<BusDTO> busList = new ArrayList<BusDTO>();
+		updateBookList(route+".txt", busBookList, busList);
+		for(int i=0; i<busList.size(); i++){
+			BusDTO bus = busList.get(i);
+			stationBookFileRead(station+".txt", bus);
+			bus.setBook(true);
+		}
+		return busList;
 	}
 
 	@Override

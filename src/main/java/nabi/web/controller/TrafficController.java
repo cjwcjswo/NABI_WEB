@@ -45,6 +45,13 @@ public class TrafficController {
 		trafficService.fileSetup();
 	}
 	
+	@RequestMapping("/selectBookBus")
+	@ResponseBody
+	public List<BusDTO> selectBusBook(String email){
+		List<BusDTO> busList = trafficService.selectBookBus(email);
+		System.out.println(busList);
+		return busList;
+	}
 	@RequestMapping("/insertBusBook")
 	@ResponseBody
 	public int insertBusBook(BusBookDTO dto){

@@ -10,6 +10,8 @@ public class BusDTO {
 	private String routeId;
 	private String staOrder;
 	private String stationId;
+	private String stationName;
+
 	private String busName;
 	private String busType;
 	private String firstStation;
@@ -24,6 +26,9 @@ public class BusDTO {
 	
 	
 	
+
+	
+	
 	@Override
 	public String toString() {
 		return "BusDTO [" + (locationNoOne != null ? "locationNoOne=" + locationNoOne + ", " : "")
@@ -35,12 +40,33 @@ public class BusDTO {
 				+ (routeId != null ? "routeId=" + routeId + ", " : "")
 				+ (staOrder != null ? "staOrder=" + staOrder + ", " : "")
 				+ (stationId != null ? "stationId=" + stationId + ", " : "")
-				+ (busName != null ? "busName=" + busName + ", " : "") + (busType != null ? "busType=" + busType : "")
-				+ "]";
+				+ (stationName != null ? "stationName=" + stationName + ", " : "")
+				+ (busName != null ? "busName=" + busName + ", " : "")
+				+ (busType != null ? "busType=" + busType + ", " : "")
+				+ (firstStation != null ? "firstStation=" + firstStation + ", " : "")
+				+ (lastStation != null ? "lastStation=" + lastStation + ", " : "")
+				+ (upFirstTime != null ? "upFirstTime=" + upFirstTime + ", " : "")
+				+ (upLastTime != null ? "upLastTime=" + upLastTime + ", " : "")
+				+ (downFirstTime != null ? "downFirstTime=" + downFirstTime + ", " : "")
+				+ (downLastTime != null ? "downLastTime=" + downLastTime + ", " : "")
+				+ (peekAlloc != null ? "peekAlloc=" + peekAlloc + ", " : "")
+				+ (nPeekAlloc != null ? "nPeekAlloc=" + nPeekAlloc + ", " : "") + "isBook=" + isBook + "]";
 	}
 
-	
-	
+
+
+	public String getStationName() {
+		return stationName;
+	}
+
+
+
+	public void setStationName(String stationName) {
+		this.stationName = stationName;
+	}
+
+
+
 	public boolean isBook() {
 		return isBook;
 	}
@@ -180,7 +206,8 @@ public class BusDTO {
 	}
 	public void setRouteId(String routeId) {
 		this.routeId = routeId;
-	}String getStationId() {
+	}
+	public String getStationId() {
 		return stationId;
 	}
 	public String getLocationNoOne() {
