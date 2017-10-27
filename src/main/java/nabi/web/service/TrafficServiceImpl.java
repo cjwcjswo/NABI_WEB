@@ -21,6 +21,7 @@ import java.util.Map;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
@@ -29,6 +30,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import nabi.web.dao.TrafficDAO;
+import nabi.web.dto.BusBookDTO;
 import nabi.web.dto.BusDTO;
 import nabi.web.dto.StationDTO;
 import nabi.web.util.Constants;
@@ -36,20 +39,33 @@ import nabi.web.util.Constants;
 @Service
 @Transactional
 public class TrafficServiceImpl implements TrafficService {
+	@Autowired
+	TrafficDAO trafficDAO;
 	/**
 	 * 버퍼 사이즈
 	 */
 	final static int BUFF_SIZE = 1024;
 
 	@Override
-	public List<BusDTO> searchStation(String stationId) {
+	public List<BusDTO> searchStation(String stationId, String email) {
 		StringBuilder sb = new StringBuilder("route");
 		Calendar cal = Calendar.getInstance();
 		sb.append(cal.get(Calendar.YEAR));
 		sb.append(String.format("%02d", cal.get(Calendar.MONTH) + 1));
 		sb.append(String.format("%02d", cal.get(Calendar.DAY_OF_MONTH)));
 		fileMake(sb + ".txt");
-		return arrivalBusList(stationId, sb + ".txt");
+		List<BusDTO> busList = arrivalBusList(stationId, sb + ".txt");
+		List<BusBookDTO> busBookDTOList= trafficDAO.selectBookBus(email);
+		for(int i=0; i<busBookDTOList.size(); i++){
+			BusBookDTO busBookDTO = busBookDTOList.get(i);
+			for(int j=0; j<busList.size(); j++){
+				BusDTO busDTO = busList.get(j);
+				if(busBookDTO.getRouteId().equals(busDTO.getBusName())){
+					busDTO.setBook(true);
+				}
+			}
+		}
+		return busList;
 	}
 
 	public void setBusCurrentStation(List<StationDTO> stationList, String routeId){
@@ -84,7 +100,6 @@ public class TrafficServiceImpl implements TrafficService {
 	}
 	public List<BusDTO> arrivalBusList(String stationId, String fileName) {
 		List<BusDTO> busList = new ArrayList<>();
-		List<String> busRouteIdList = new ArrayList<>();
 		URL url;
 		Document doc;
 		try {
@@ -109,24 +124,12 @@ public class TrafficServiceImpl implements TrafficService {
 					bus.setStaOrder(getTagValue("staOrder", eElement));
 					String routeId = getTagValue("routeId", eElement);
 					bus.setRouteId(routeId);
-					busRouteIdList.add(routeId);
 					bus.setStationId(getTagValue("stationId", eElement));
 					busList.add(bus);
 				}
 			}
-			Map<String, List<String>> map = fileRead(fileName, busRouteIdList);
-			List<String> busNameList = map.get("name");
-			List<String> busTypeList = map.get("type");
-			List<String> firstList = map.get("first");
-			List<String> lastList = map.get("last");
-			for (int i = 0; i < busNameList.size(); i++) {
-				BusDTO bus = busList.get(i);
-				bus.setBusName(busNameList.get(i));
-				bus.setBusType(busTypeList.get(i));
-				bus.setFirstStation(firstList.get(i));
-				bus.setLastStation(lastList.get(i));
+			fileRead(fileName, busList);
 
-			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -167,41 +170,41 @@ public class TrafficServiceImpl implements TrafficService {
 		return stationList;
 	}
 
-	public Map<String, List<String>> fileRead(String fileName, List<String> busRouteList) {
-		Map<String, List<String>> map = new HashMap<>();
-		List<String> busNameList = null;
-		List<String> busTypeList = null;
-		List<String> firstList = null;
-		List<String> lastList = null;
+	public void fileRead(String fileName, List<BusDTO> busList) {
+
 		try { // 예외 처리는 기본으로 해 줘야 한다
 				// 파일에서 스트림을 통해 주르륵 읽어들인다
 			BufferedReader in = new BufferedReader(new FileReader(Constants.ROUTE_FOLDER + "\\" + fileName));
-			busNameList = new ArrayList<>();
-			busTypeList = new ArrayList<>();
-			firstList = new ArrayList<>();
-			lastList = new ArrayList<>();
+
 			String s;
 			while ((s = in.readLine()) != null) {
 				String[] split = s.split("\\^");
-				for (int i = 0; i < busRouteList.size(); i++) {
+				for (int i = 0; i < busList.size(); i++) {
+					BusDTO busDTO = busList.get(i);
 					for (int j = 0; j < split.length; j++) {
 						String[] busInfo = split[j].split("\\|");
-						if (busRouteList.get(i).equals(busInfo[0])) {
-							busNameList.add(busInfo[1]);
-							firstList.add(busInfo[4]);
-							lastList.add(busInfo[7]);
+						if (busDTO.getRouteId().equals(busInfo[0])) {
+							busDTO.setBusName(busInfo[1]);
+							busDTO.setFirstStation(busInfo[4]);
+							busDTO.setLastStation(busInfo[7]);
+							busDTO.setUpFirstTime(busInfo[9]);
+							busDTO.setUpLastTime(busInfo[10]);
+							busDTO.setDownFirstTime(busInfo[11]);
+							busDTO.setDownLastTime(busInfo[12]);
+							busDTO.setPeekAlloc(busInfo[13]);
+							busDTO.setnPeekAlloc(busInfo[14]);
 							switch (busInfo[2]) {
 							case "13":
 							case "23":
-								busTypeList.add("G");
+								busDTO.setBusType("G");
 								break;
 							case "11":
 							case "12":
 							case "14":
-								busTypeList.add("R");
+								busDTO.setBusType("R");
 								break;
 							default:
-								busTypeList.add("B");
+								busDTO.setBusType("B");
 								break;
 							}
 							break;
@@ -213,11 +216,6 @@ public class TrafficServiceImpl implements TrafficService {
 		} catch (IOException e) {
 			System.err.println(e);
 		}
-		map.put("name", busNameList);
-		map.put("type", busTypeList);
-		map.put("first", firstList);
-		map.put("last", lastList);
-		return map;
 	}
 
 	public void fileMake(String fileName) {
@@ -332,5 +330,20 @@ public class TrafficServiceImpl implements TrafficService {
 		fileMake(routeSb + ".txt");
 		fileMake(routeStationSb + ".txt");
 
+	}
+
+	@Override
+	public List<BusBookDTO> selectBookBus(String email) {
+		return trafficDAO.selectBookBus(email);
+	}
+
+	@Override
+	public int insertBookBus(BusBookDTO dto) {
+		return trafficDAO.insertBookBus(dto);
+	}
+
+	@Override
+	public int deleteBookBus(BusBookDTO dto) {
+		return trafficDAO.deleteBookBus(dto);
 	}
 }

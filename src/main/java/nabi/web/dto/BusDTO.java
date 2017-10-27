@@ -14,8 +14,14 @@ public class BusDTO {
 	private String busType;
 	private String firstStation;
 	private String lastStation;
-
-
+	private String upFirstTime;
+	private String upLastTime;
+	private String downFirstTime;
+	private String downLastTime;
+	private String peekAlloc;
+	private String nPeekAlloc;
+	private boolean isBook;
+	
 	
 	
 	@Override
@@ -35,6 +41,90 @@ public class BusDTO {
 
 	
 	
+	public boolean isBook() {
+		return isBook;
+	}
+
+
+
+	public void setBook(boolean isBook) {
+		this.isBook = isBook;
+	}
+
+
+
+	public String getUpFirstTime() {
+		return upFirstTime;
+	}
+
+
+
+	public void setUpFirstTime(String upFirstTime) {
+		this.upFirstTime = upFirstTime;
+	}
+
+
+
+	public String getUpLastTime() {
+		return upLastTime;
+	}
+
+
+
+	public void setUpLastTime(String upLastTime) {
+		this.upLastTime = upLastTime;
+	}
+
+
+
+	public String getDownFirstTime() {
+		return downFirstTime;
+	}
+
+
+
+	public void setDownFirstTime(String downFirstTime) {
+		this.downFirstTime = downFirstTime;
+	}
+
+
+
+	public String getDownLastTime() {
+		return downLastTime;
+	}
+
+
+
+	public void setDownLastTime(String downLastTime) {
+		this.downLastTime = downLastTime;
+	}
+
+
+
+	public String getPeekAlloc() {
+		return peekAlloc;
+	}
+
+
+
+	public void setPeekAlloc(String peekAlloc) {
+		this.peekAlloc = peekAlloc;
+	}
+
+
+
+	public String getnPeekAlloc() {
+		return nPeekAlloc;
+	}
+
+
+
+	public void setnPeekAlloc(String nPeekAlloc) {
+		this.nPeekAlloc = nPeekAlloc;
+	}
+
+
+
 	public String getFirstStation() {
 		return firstStation;
 	}

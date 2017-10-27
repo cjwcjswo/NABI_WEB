@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="trafficMapper">
+	<select id="selectBusBook" parameterType="string" resultType="busBookDTO">
+		select * from STATION_BUS_BOOKMARK where EMAIL = #{email}
+	</select>
+	<insert id="insertBusBook" parameterType="busBookDTO">
+		insert into STATION_BUS_BOOKMARK values(#{email}, #{routeId}, #{stationId}, #{isBook})
+	</insert>
+	<delete id="deleteBusBook" parameterType="busBookDTO">
+		delete from STATION_BUS_BOOKMARK where EMAIL=#{email} and ROUTEID=#{routeId} and STATIONID=#{stationId}
+	</delete>
+</mapper>

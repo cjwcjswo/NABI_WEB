@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import nabi.web.dto.BusBookDTO;
 import nabi.web.dto.BusDTO;
 import nabi.web.dto.StationDTO;
 import nabi.web.service.TrafficService;
@@ -33,8 +34,8 @@ public class TrafficController {
 	}
 	@RequestMapping("/searchStation")
 	@ResponseBody
-	public List<BusDTO> searchStation(String stationId){
-		List<BusDTO> busList = trafficService.searchStation(stationId);;
+	public List<BusDTO> searchStation(String stationId, String email){
+		List<BusDTO> busList = trafficService.searchStation(stationId, email);
 		System.out.println(busList);
 		return busList;
 	}
@@ -43,4 +44,20 @@ public class TrafficController {
 	public void updateInfo(){
 		trafficService.fileSetup();
 	}
+	
+	@RequestMapping("/insertBusBook")
+	@ResponseBody
+	public int insertBusBook(BusBookDTO dto){
+		System.out.println(dto);
+		return 
+				trafficService.insertBookBus(dto);
+	}
+	
+	@RequestMapping("/deleteBusBook")
+	@ResponseBody
+	public int deleteBusBook(BusBookDTO dto){
+		System.out.println(dto);
+		return trafficService.deleteBookBus(dto);
+	}
+	
 }
